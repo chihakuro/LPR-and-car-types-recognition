@@ -1,41 +1,25 @@
-#Import library for GUI
+# Import library for GUI
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
-from matplotlib import pyplot as plt
+from pathlib import Path
 
-#Import library for model
-import cv2
-import numpy as np
+# Import library for model
 import os
 import time
-import torch as th
 from ultralytics import YOLO
-from torchvision.ops import boxes as box_ops
 from rielocr import *
 
-#Import library for saving to CSV
+# Import library for saving to CSV
 import pandas as pd
 
-#Create main window
+# Create main window
 root = tk.Tk()
 root.title("License Plate Recognition")
+# set window logo
+logo = Path(__file__).with_name('logo.ico')
+root.iconbitmap(logo)
 root.geometry("1000x500")
-
-# create menu bar
-menubar = tk.Menu(root)
-
-file_menu = tk.Menu(menubar, tearoff=0)
-file_menu.add_command(label="Open")
-file_menu.add_command(label="Exit", command=root.quit)
-menubar.add_cascade(label="File", menu=file_menu)
-
-about_menu = tk.Menu(menubar, tearoff=0)
-about_menu.add_command(label="Help")
-about_menu.add_command(label="About")
-menubar.add_cascade(label="About", menu=about_menu)
-
-root.config(menu=menubar)
 
 # create input and output frames
 input_frame = tk.Frame(root, width=500, height=500)
@@ -63,30 +47,58 @@ image_time = []
 vehicle_type = []
 max_array_length = 0
 
-
-
-# input area ------------------------------------------------
+# input area label
 input_label = tk.Label(input_frame, text="Input Area", font=bold, anchor="nw", justify="left")
 input_label.pack(side="top", padx=10, pady=5, anchor="nw")
 
+# Help button
+def help_dialog():
+    title = "Help"
+    message = "This program is designed to recognize license plate and vehicle type.\n\n" \
+              "To use this program, please follow the steps below:\n" \
+              "1. Click on the 'Open Images...' button to select the images you want to process.\n" \
+              "2. Click on the 'Start Recognition!' button to start the process.\n" \
+              "3. Click on the 'Save to CSV!' button to save the results to a CSV file.\n" \
+              "Note: You can also use the 'Next >' and '< Previous' buttons to navigate through the images."
+
+    messagebox.showinfo(title, message)
+
+# About button
+def about_dialog():
+    title = "About Plate Vehicle Recognition"
+    message = "This program is designed to recognize license plate and vehicle type.\n\n" \
+              "Developed by: Group 5\n" \
+              "Version: Patch 1.01 - Release 1.00\n" \
+              "Date: February 25, 2023\n" \
+              "License: Open Source"
+
+    messagebox.showinfo(title, message)
+
 # open images function
 def open_images(): #Can open multiple images at once
-    global image_list, image_count, image_number, image, image_tk, image_label, next_button, previous_button, image_number_label
+    global image_list, image_count, image_number, image, image_tk, image_label, next_button, previous_button, image_number_label, canvas
+    # remove current image and its prediction
+    try:
+        image_label.destroy()
+        next_button.destroy()
+        previous_button.destroy()
+        image_number_label.destroy()
+        image_list = []
+        image_count = 0
+        
+    except:
+        pass
 
+    # open images
     image_list = filedialog.askopenfilenames(title="Select images", filetypes=(("jpeg files", "*.jpg"), ("png files", "*.png"), ("all files", "*.*")))
     print(image_list)
     
     image_count = len(image_list)
     image_number = 0
 
-    # problem: if you open images, then open images again, the new images will be moved down from the canvas
-    # solution: remove previous images from canvas
-    # where to put the code canvas.delete("all") in a function so that it can be called in the open_images function?
-    # 
-
     # display first image
     image = Image.open(image_list[image_number])
-    image = image.resize((400, 320), Image.LANCZOS)
+    image = image.resize((400, 300), Image.LANCZOS)
     image_tk = ImageTk.PhotoImage(image)
     image_label = tk.Label(canvas, image=image_tk)
     image_label.pack()
@@ -119,7 +131,7 @@ def next_image():
     if image_number == image_count:
         image_number = 0
     image = Image.open(image_list[image_number])
-    image = image.resize((400, 320), Image.LANCZOS)
+    image = image.resize((400, 300), Image.Resampling.LANCZOS)
     image_tk = ImageTk.PhotoImage(image)
     image_label = tk.Label(canvas, image=image_tk)
     image_label.pack()
@@ -136,17 +148,32 @@ def previous_image():
     if image_number == -1:
         image_number = image_count - 1
     image = Image.open(image_list[image_number])
-    image = image.resize((400, 320), Image.LANCZOS)
+    image = image.resize((400, 300), Image.LANCZOS)
     image_tk = ImageTk.PhotoImage(image)
     image_label = tk.Label(canvas, image=image_tk)
     image_label.pack()
-    
+
+# create menu bar
+menubar = tk.Menu(root)
+
+file_menu = tk.Menu(menubar, tearoff=0)
+file_menu.add_command(label="Open", command=open_images)
+file_menu.add_command(label="Exit", command=root.quit)
+menubar.add_cascade(label="File", menu=file_menu)
+
+about_menu = tk.Menu(menubar, tearoff=0)
+about_menu.add_command(label="Help", command=help_dialog)
+about_menu.add_command(label="About", command=about_dialog)
+menubar.add_cascade(label="About", menu=about_menu)
+
+root.config(menu=menubar)
+
 # make a "Open Images..." button
 open_images_button = tk.Button(input_frame, text="Open Images...", font=normal, border=2, relief="solid", width=20, height=1, command=open_images)
 open_images_button.pack(side="top", padx=10, pady=5)
 
 # make a canvas to display images
-canvas = tk.Canvas(input_frame, width=400, height=320, bg="white")
+canvas = tk.Canvas(input_frame, width=400, height=300, bg="white")
 canvas.create_text(200, 160, text="No image selected :((", font=normal)
 canvas.pack(side="top", padx=30, pady=5)
 
@@ -154,13 +181,26 @@ canvas.pack(side="top", padx=30, pady=5)
 def start_recognition():
     global image_list, vehicle_count, license_plate_count, vehicle_prob, license_plate_prob, license_plate_number, input, image_date, image_time, vehicle_type
 
+    # remove the previous output
+    try:
+        vehicle_count = 0
+        license_plate_count = 0
+        vehicle_prob = []
+        license_plate_prob = []
+        license_plate_number = []
+        input = []
+        image_date = []
+        image_time = []
+        vehicle_type = []
+        overview_text.destroy()
+        details_text.destroy()
+        progress_bar.destroy()
+    except:
+        pass
+
     if len(image_list) == 0:
         messagebox.showerror("Error", "Please select at least one image!")
     else:
-        # showing progress bar in output area, after that, showing recognition results including:
-        # Overview: number of vehicles, number of license plates
-        # Details: Vehicle type, vehicle prediction accuracy, license plate number, license plate number prediction accuracy; repeat details for each vehicle
-        
         # show progress bar
         progress_bar = ttk.Progressbar(output_frame, orient="horizontal", length=425, mode="determinate")
         progress_bar.place(relx=0.1, rely=0.1)
@@ -177,12 +217,19 @@ def start_recognition():
         # given trained model file 'best.pt' using yolo v8, load model and get number of vehicles and license plates
         for image in image_list:
             input.append(image)
+            # resize image to 640x640
+            image = Image.open(image)
+            image = image.resize((640, 640), Image.Resampling.LANCZOS)
         
-        model = YOLO("C:\\Users\\Administrator\\Desktop\\lpr\\best1.pt")
-        out = model.predict(show=False, source=input, stream=False)
+        # get best.pt file if it belongs to the same directory as the python file
+        m = Path(__file__).with_name('best.pt')
+        model = YOLO(m)
+        out = model.predict(show=True, source=input, stream=False)
         for result in out:
             for i in result:
                 i = i.boxes.boxes
+                if i is None:
+                    messagebox.showerror("Error", "No vehicle or license plate detected!")
                 print(i)
                 for j in i:
                     vpb = (j[4]*100).item()
@@ -277,7 +324,7 @@ def start_recognition():
             details_text.insert("end", "Vehicle type: " + vehicle_type[i] + "\n")
             details_text.insert("end", "Vehicle prediction accuracy: " + str(vehicle_prob[i]) + "%\n")
             details_text.insert("end", "License plate number: " + license_plate_number[i] + "\n")
-            details_text.insert("end", "License plate number prediction accuracy: " + license_plate_prob[i] + "%\n")
+            details_text.insert("end", "License plate number prediction accuracy: " + str(license_plate_prob[i]) + "%\n")
             details_text.insert("end", "\n")
         details_text.place(relx=0.1, rely=0.45)
         details_vsb.place(relx=0.9, rely=0.45, relheight=0.35)
@@ -291,11 +338,13 @@ def start_recognition():
     print(license_plate_prob)
 # export results function
 def export_results():
-    # format: date, time, vehicle type, vehicle prediction accuracy, license plate number, license plate number prediction accuracy
-    # export results to csv file
     global image_list, vehicle_count, license_plate_count, vehicle_prob, license_plate_prob, license_plate_number, input, image_date, image_time, vehicle_type
     
-    pd.DataFrame({"Date": image_date, "Time": image_time, "Vehicle Type": vehicle_type, "Vehicle Prediction Accuracy": vehicle_prob, "License Plate Number": license_plate_number, "License Plate Number Prediction Accuracy": license_plate_prob}).to_csv("C:\\Users\\Administrator\\Desktop\\lpr\\results.csv", index=False)
+    # append results to existing file if csv file already exists, otherwise create new csv file
+    if os.path.exists(Path(__file__).with_name("results.csv")):
+        pd.DataFrame({"Date": image_date, "Time": image_time, "Vehicle Type": vehicle_type, "Vehicle Prediction Accuracy": vehicle_prob, "License Plate Number": license_plate_number, "License Plate Number Prediction Accuracy": license_plate_prob}).to_csv((Path(__file__).with_name('results.csv')), mode="a", header=False, index=False)
+    else:
+        pd.DataFrame({"Date": image_date, "Time": image_time, "Vehicle Type": vehicle_type, "Vehicle Prediction Accuracy": vehicle_prob, "License Plate Number": license_plate_number, "License Plate Number Prediction Accuracy": license_plate_prob}).to_csv((Path(__file__).with_name('results.csv')), index=False)
 
     # show message box
     messagebox.showinfo("Export Results", "Results exported to csv file!")
