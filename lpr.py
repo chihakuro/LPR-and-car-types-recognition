@@ -234,19 +234,11 @@ def start_recognition():
                 print(i)
                 for j in i:
                     vpb = (j[4]*100).item()
+                    vpb = round(vpb, 2)
                     if j[5] == 0:
                         vehicle_count += 1
                         vehicle_type.append('Car')
                         vehicle_prob.append(vpb)
-                        # if the license plate bounding box is in car bounding box, then it is belong to the car, else it is a plate without vehicles
-                        if j[0] >= i[0][0] and j[1] >= i[0][1] and j[2] <= i[0][2] and j[3] <= i[0][3]:
-                            license_plate_count += 1
-                            x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
-                            image = Image.open(image_list[image_number])
-                            cropped_image = image.crop((x1, y1, x2, y2))
-                            cropped_image.save("cropped_image.jpg")
-                            license_plate_number.append(rielocr("cropped_image.jpg"))
-                            license_plate_prob.append(vpb)
 
                     elif j[5] == 1:
                         license_plate_count += 1
@@ -254,7 +246,8 @@ def start_recognition():
                         image = Image.open(image_list[image_number])
                         cropped_image = image.crop((x1, y1, x2, y2))
                         cropped_image.save("cropped_image.jpg")
-                        license_plate_number.append(rielocr("cropped_image.jpg"))
+                        ocr = char("cropped_image.jpg")
+                        license_plate_number.append(ocr)
                         license_plate_prob.append(vpb)
 
                     elif j[5] == 2:
@@ -265,15 +258,6 @@ def start_recognition():
                         vehicle_count += 1
                         vehicle_type.append('Motorbike')
                         vehicle_prob.append(vpb)
-                        # if the license plate bounding box is in motorbike bounding box, then it is belong to the motorbike, else it is a plate without vehicles
-                        if j[0] >= i[0][0] and j[1] >= i[0][1] and j[2] <= i[0][2] and j[3] <= i[0][3]:
-                            license_plate_count += 1
-                            x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
-                            image = Image.open(image_list[image_number])
-                            cropped_image = image.crop((x1, y1, x2, y2))
-                            cropped_image.save("cropped_image.jpg")
-                            license_plate_number.append(rielocr("cropped_image.jpg"))
-                            license_plate_prob.append(vpb)
 
         # remove progress bar and show recognition results
         if progress_bar["value"] == 100:
@@ -300,16 +284,6 @@ def start_recognition():
         # Fill missing values with None
         max_array_length = max(vehicle_count, license_plate_count)
 
-        # Ensure all lists have the same length
-        while len(vehicle_type) < max_array_length:
-            vehicle_type.append('Unknown')
-        while len(vehicle_prob) < max_array_length:
-            vehicle_prob.append('0')
-        while len(license_plate_number) < max_array_length:
-            license_plate_number.append('Unknown')
-        while len(license_plate_prob) < max_array_length:
-            license_plate_prob.append('0')
-
         # Loop through the lists and fill in missing values
         for image in image_list:
             # get image date and time
@@ -321,25 +295,19 @@ def start_recognition():
             imtime = time.strftime("%H-%M-%S", t_obj)
             image_time.append(imtime)
 
-        # make sure all lists have the same length
+        # Ensure all lists have the same length
+        while len(vehicle_type) < max_array_length:
+            vehicle_type.append('Unknown')
+        while len(vehicle_prob) < max_array_length:
+            vehicle_prob.append('0')
+        while len(license_plate_number) < max_array_length:
+            license_plate_number.append('Unknown')
+        while len(license_plate_prob) < max_array_length:
+            license_plate_prob.append('0')
         while len(image_date) < max_array_length:
-            for i in range(len(image_date)):
-                try:
-                    if image_date[i] == image_date[i+1]:
-                        if len(image_date) != max_array_length:
-                            image_date.insert(i,image_date[i])
-                            image_time.insert(i,image_time[i])
-                        else:
-                            pass
-                    elif image_date[i] != image_date[i+1]:
-                        if len(image_date) != max_array_length:
-                            image_date.insert(i,image_date[i])
-                            image_time.insert(i,image_time[i])
-                        else:
-                            pass                    
-                except:
-                    break
-                # note: python crashes when only one image is selected
+            # replace missing values with date and time of the image which the vehicle or license plate was detected
+            image_date.append(image_date[image_number])
+            image_time.append(image_time[image_number])
 
         for i in range(max_array_length):
             details_text.insert("end", "Vehicle type: " + vehicle_type[i] + "\n")
