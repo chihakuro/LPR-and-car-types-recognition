@@ -9,6 +9,7 @@ import os
 import time
 from ultralytics import YOLO
 from rielocr import *
+from char import *
 
 # Import library for saving to CSV
 import pandas as pd
@@ -237,6 +238,16 @@ def start_recognition():
                         vehicle_count += 1
                         vehicle_type.append('Car')
                         vehicle_prob.append(vpb)
+                        # if the license plate bounding box is in car bounding box, then it is belong to the car, else it is a plate without vehicles
+                        if j[0] >= i[0][0] and j[1] >= i[0][1] and j[2] <= i[0][2] and j[3] <= i[0][3]:
+                            license_plate_count += 1
+                            x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
+                            image = Image.open(image_list[image_number])
+                            cropped_image = image.crop((x1, y1, x2, y2))
+                            cropped_image.save("cropped_image.jpg")
+                            license_plate_number.append(rielocr("cropped_image.jpg"))
+                            license_plate_prob.append(vpb)
+
                     elif j[5] == 1:
                         license_plate_count += 1
                         x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
@@ -245,6 +256,7 @@ def start_recognition():
                         cropped_image.save("cropped_image.jpg")
                         license_plate_number.append(rielocr("cropped_image.jpg"))
                         license_plate_prob.append(vpb)
+
                     elif j[5] == 2:
                         vehicle_count += 1
                         vehicle_type.append('Bicycle')
@@ -253,6 +265,15 @@ def start_recognition():
                         vehicle_count += 1
                         vehicle_type.append('Motorbike')
                         vehicle_prob.append(vpb)
+                        # if the license plate bounding box is in motorbike bounding box, then it is belong to the motorbike, else it is a plate without vehicles
+                        if j[0] >= i[0][0] and j[1] >= i[0][1] and j[2] <= i[0][2] and j[3] <= i[0][3]:
+                            license_plate_count += 1
+                            x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
+                            image = Image.open(image_list[image_number])
+                            cropped_image = image.crop((x1, y1, x2, y2))
+                            cropped_image.save("cropped_image.jpg")
+                            license_plate_number.append(rielocr("cropped_image.jpg"))
+                            license_plate_prob.append(vpb)
 
         # remove progress bar and show recognition results
         if progress_bar["value"] == 100:

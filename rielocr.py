@@ -2,35 +2,34 @@
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
-import imutils
 import easyocr
+import albumentations as A
 
 def rielocr(Segs):
-  #Load image
-  img = cv2.imread(Segs)
-  gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    # Define the augmentations
+    blur = A.Blur(p=0.01, blur_limit=(3, 7))
+    median_blur = A.MedianBlur(p=0.01, blur_limit=(3, 7))
+    to_gray = A.ToGray(p=0.01)
+    clahe = A.CLAHE(p=0.01, clip_limit=(1, 4.0), tile_grid_size=(8, 8))
 
-  # blur
-  blur = cv2.GaussianBlur(gray, (0,0), sigmaX=33, sigmaY=33)
+    # Load the image
+    image = cv2.imread(Segs)
 
-  # divide
-  divide = cv2.divide(gray, blur, scale=255)
+    # Apply the augmentations to the image
+    transformed = blur(image=image)
+    transformed = median_blur(image=transformed['image'])
+    transformed = to_gray(image=transformed['image'])
+    transformed = clahe(image=transformed['image'])
 
-  # otsu threshold
-  thresh = cv2.threshold(divide, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)[1]
+    # Create an EasyOCR reader object
+    reader = easyocr.Reader(['en'])
 
-  #Create an EasyOCR reader object:
-  reader = easyocr.Reader(['en'])
-  result = reader.readtext(thresh)
+    # Read the text from the transformed image
+    result = reader.readtext(transformed['image'])
 
-  text = ''
-  range(len(result))
-  for i in range(0,len(result)):
-    text += result[i][-2]
-    if i == range(len(result)-1):
-      break
-    else:
-      text+='-'
-  text = text[:-1]
-  return text
+    # Extract the text from the result
+    text = ''.join([x[1] for x in result])         
+    return text          
+
+  
 
