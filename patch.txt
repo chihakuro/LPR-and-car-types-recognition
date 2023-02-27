@@ -1,8 +1,7 @@
-Patch 1.01 - Release 1.00
+Patch 1.01
 - Reset parameters with new image open action (so canvas and output don't stack)
 - No need to change code for corresponding file
 - Added information in menu bar
 - Predicted information is appended to csv instead of replace the old one(if existed)
 - Change input image canvas from 400x320 to 400x300
 - Create patch.txt for patch notes
-- Packaged to .exe for a seperated program
