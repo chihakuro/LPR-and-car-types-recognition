@@ -246,7 +246,7 @@ def start_recognition():
                         image = Image.open(image_list[image_number])
                         cropped_image = image.crop((x1, y1, x2, y2))
                         cropped_image.save("cropped_image.jpg")
-                        ocr = char("cropped_image.jpg")
+                        ocr = rielocr("cropped_image.jpg")
                         license_plate_number.append(ocr)
                         license_plate_prob.append(vpb)
 
