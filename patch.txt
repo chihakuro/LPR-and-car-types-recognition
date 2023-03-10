@@ -1,3 +1,6 @@
+Patch 1.02 - Release 1.00
+- Optimized codes and results
+
 Patch 1.01 - Release 1.00
 - Reset parameters with new image open action (so canvas and output don't stack)
 - No need to change code for corresponding file
