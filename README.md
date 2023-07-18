@@ -59,7 +59,7 @@ How all of things work:
 
 ## II. Installation:
 ### 1. Requirement libraries:
-First we have to install these libraries (or install through requirement.txt):
+First we have to install these libraries (or install through requirements.txt):
 ```bash
 pip install numpy
 pip install pandas
@@ -67,6 +67,9 @@ pip install opencv-python
 pip install ultralytics
 pip install easyocr
 pip install Pillow
+```
+```bash
+pip install -r requirements.txt
 ```
 
 ### 2. After that:
