@@ -59,7 +59,7 @@ How all of things work:
 
 ## II. Installation:
 ### 1. Requirement libraries:
-First we have to install these libraries:
+First we have to install these libraries (or install through requirement.txt):
 ```bash
 pip install numpy
 pip install pandas
