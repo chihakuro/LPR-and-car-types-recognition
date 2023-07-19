@@ -5,7 +5,7 @@ import numpy as np
 import easyocr
 import albumentations as A
 
-def rielocr(Segs):
+def rielocr(img):
     # Define the augmentations
     blur = A.Blur(p=0.01, blur_limit=(3, 7))
     median_blur = A.MedianBlur(p=0.01, blur_limit=(3, 7))
@@ -13,9 +13,8 @@ def rielocr(Segs):
     clahe = A.CLAHE(p=0.01, clip_limit=(1, 4.0), tile_grid_size=(8, 8))
 
     # Load the image
-    image = cv2.imread(Segs)
+    image = cv2.imread(img)
 
-    # Apply the augmentations to the image
     transformed = blur(image=image)
     transformed = median_blur(image=transformed['image'])
     transformed = to_gray(image=transformed['image'])
@@ -30,6 +29,5 @@ def rielocr(Segs):
     # Extract the text from the result
     text = ''.join([x[1] for x in result])         
     return text          
-
   
 

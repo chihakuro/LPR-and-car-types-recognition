@@ -69,7 +69,7 @@ def about_dialog():
     title = "About Plate Vehicle Recognition"
     message = "This program is designed to recognize license plate and vehicle type.\n\n" \
               "Developed by: Group 5\n" \
-              "Version: Patch 1.01 - Release 1.00\n" \
+              "Version: Patch 1.02\n" \
               "Date: February 25, 2023\n" \
               "License: Open Source"
 
@@ -228,7 +228,8 @@ def start_recognition():
         out = model.predict(show=True, source=input, stream=False)
         for result in out:
             for i in result:
-                i = i.boxes.boxes
+                i = i.boxes.data
+                print(i)
                 if i is None:
                     messagebox.showerror("Error", "No vehicle or license plate detected!")
                 for j in i:
@@ -274,7 +275,6 @@ def start_recognition():
         details_label.place(relx=0.09, rely=0.4)
         details_text = tk.Text(output_frame, width=60, height=11, font=normal, border=2, relief="solid")
         details_vsb = tk.Scrollbar(output_frame, orient="vertical", command=details_text.yview)
-        details_text.configure(yscrollcommand=details_vsb.set, state='disabled')
 
         # Fill missing values with None
         max_array_length = max(vehicle_count, license_plate_count)
@@ -304,14 +304,18 @@ def start_recognition():
             image_date.append(image_date[image_number])
             image_time.append(image_time[image_number])
 
+        details_text.place(relx=0.1, rely=0.45)
+        details_vsb.place(relx=0.9, rely=0.45, relheight=0.35)
+
         for i in range(max_array_length):
             details_text.insert("end", "Vehicle type: " + vehicle_type[i] + "\n")
             details_text.insert("end", "Vehicle prediction accuracy: " + str(vehicle_prob[i]) + "%\n")
             details_text.insert("end", "License plate number: " + license_plate_number[i] + "\n")
             details_text.insert("end", "License plate number prediction accuracy: " + str(license_plate_prob[i]) + "%\n")
             details_text.insert("end", "\n")
-        details_text.place(relx=0.1, rely=0.45)
-        details_vsb.place(relx=0.9, rely=0.45, relheight=0.35)
+
+        details_text.configure(yscrollcommand=details_vsb.set, state='disabled')
+
 
 # Export results function
 def export_results():
