@@ -91,7 +91,7 @@ def open_images(): # Can open multiple images at once
         pass
 
     # Open images
-    image_list = filedialog.askopenfilenames(title="Select images", filetypes=(("jpeg files", "*.jpg"), ("png files", "*.png"), ("all files", "*.*")))
+    image_list = filedialog.askopenfilenames(title="Select images", filetypes=(("all files", "*.*"), ("jpeg files", "*.jpg"), ("png files", "*.png")))
     print(image_list)
     
     image_count = len(image_list)
@@ -235,27 +235,34 @@ def start_recognition():
                 for j in i:
                     vpb = (j[4]*100).item()
                     vpb = round(vpb, 2)
-                    if j[5] == 0:
+                    if j[5] == 2:
                         vehicle_count += 1
                         vehicle_type.append('Car')
                         vehicle_prob.append(vpb)
-                    elif j[5] == 1:
-                        license_plate_count += 1
+                        # Get x1, y1, x2, y2 coordinates of the license plate
                         x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
-                        image = Image.open(image_list[image_number])
-                        cropped_image = image.crop((x1, y1, x2, y2))
-                        cropped_image.save("cropped_image.jpg")
-                        ocr = rielocr("cropped_image.jpg")
+                        # Crop the image and temporarily save it
+                        image_curr = Image.open(image_list[image_number])
+                        cropped_image = image_curr.crop((x1, y1, x2, y2))
+                        cropped_image.save("cropped_image.png")
+                        # Use OCR to recognize the license plate number
+                        ocr = rielocr("cropped_image.png")
                         license_plate_number.append(ocr)
                         license_plate_prob.append(vpb)
-                    elif j[5] == 2:
-                        vehicle_count += 1
-                        vehicle_type.append('Bicycle')
-                        vehicle_prob.append(vpb)
                     elif j[5] == 3:
                         vehicle_count += 1
-                        vehicle_type.append('Motorbike')
+                        vehicle_type.append('Motorcycle')
                         vehicle_prob.append(vpb)
+                        # Get x1, y1, x2, y2 coordinates of the license plate
+                        x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
+                        # Crop the image and temporarily save it
+                        image_curr = Image.open(image_list[image_number])
+                        cropped_image = image_curr.crop((x1, y1, x2, y2))
+                        cropped_image.save("cropped_image.png")
+                        # Use OCR to recognize the license plate number
+                        ocr = rielocr("cropped_image.png")
+                        license_plate_number.append(ocr)
+                        license_plate_prob.append(vpb)
 
         # Remove progress bar and show recognition results
         if progress_bar["value"] == 100:
