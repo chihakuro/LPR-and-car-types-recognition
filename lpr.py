@@ -13,6 +13,9 @@ from rielocr import *
 # Import library for saving to CSV
 import pandas as pd
 
+# Get model file from link
+link = ''
+
 # Create main window
 root = tk.Tk()
 root.title("License Plate Recognition")
@@ -252,6 +255,20 @@ def start_recognition():
                     elif j[5] == 3:
                         vehicle_count += 1
                         vehicle_type.append('Motorcycle')
+                        vehicle_prob.append(vpb)
+                        # Get x1, y1, x2, y2 coordinates of the license plate
+                        x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
+                        # Crop the image and temporarily save it
+                        image_curr = Image.open(image_list[image_number])
+                        cropped_image = image_curr.crop((x1, y1, x2, y2))
+                        cropped_image.save("cropped_image.png")
+                        # Use OCR to recognize the license plate number
+                        ocr = rielocr("cropped_image.png")
+                        license_plate_number.append(ocr)
+                        license_plate_prob.append(vpb)
+                    elif j[5] == 1:
+                        vehicle_count += 1
+                        vehicle_type.append('Bicycle')
                         vehicle_prob.append(vpb)
                         # Get x1, y1, x2, y2 coordinates of the license plate
                         x1, y1, x2, y2 = j[0].item(), j[1].item(), j[2].item(), j[3].item()
