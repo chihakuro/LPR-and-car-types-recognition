@@ -1,5 +1,6 @@
 # LPR-and-car-types-recognition
 A small project which involves mainly training models to recognize plate number on cars and utilize it by combining it with car type recognition.
+
 Important Note: Now using state-of-the-art YOLOv9 for recognition. The same process applies.
 
 ![Screenshot 2023-07-18 203445](https://github.com/jindaina7734/LPR-and-car-types-recognition/assets/61261926/27c43dcf-57c9-4b7c-88de-614c251e9858)
